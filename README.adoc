@@ -1,0 +1,22 @@
+= Effective Java Third Edition
+Alvin-Lo <ak47237496@gmail.com>
+v1.0, 2021-12-20
+:experimental:
+:icons: font
+:source-highlighter: prettify
+:sectnums:
+:toc: left
+:toc-title: 大綱
+:imagesdir: images
+
+== Creating and Destroying Objects
+
+在此章節內容包含建立與銷毀物件: 何時與如何建立物件、何時與如何避免建立、如何確保他們及時的被刪除、以及如何管理，在銷毀前的清理動作
+
+include::doc/Effective-Java-Third Edition/Chapter2.adoc[]
+
+== Methods Common to All Objects
+
+Object是java中最源頭的物件，所有類都會繼承，其中有許多Object中的方法，如equals、hashCode、toString、clone，此章介紹何時以及如何覆寫
+
+include::doc/Effective-Java-Third Edition/Chapter3.adoc[]

@@ -1,0 +1,38 @@
+=== Consider static factory methods instead of constructors
+
+include::chapter2/item1.adoc[]
+
+=== Consider a builder when faced with many constructor parameters
+
+include::chapter2/item2.adoc[]
+
+=== Enforce the singleton property with a private constructor or an enum type
+
+include::chapter2/item3.adoc[]
+
+=== Enforce noninstantiability with a private constructor
+
+include::chapter2/item4.adoc[]
+
+=== Prefer dependency injection to hardwiring resources
+
+include::chapter2/item5.adoc[]
+
+=== Avoid creating unnecessary objects
+
+include::chapter2/item6.adoc[]
+
+=== Eliminate obsolete object references
+
+include::chapter2/item7.adoc[]
+
+=== Avoid finalizers and cleaners
+
+include::chapter2/item8.adoc[]
+
+=== Prefer try-with-resources to try-finally
+
+include::chapter2/item9.adoc[]
+
+
+

@@ -1,0 +1,30 @@
+==== 主旨
+
+透過私有建構函式來禁止實例化
+
+==== 說明
+
+有時候你可能會想寫一個由靜態方法或靜態欄位組成的類別，雖然這樣的類別遭到濫用，但在JAVA中還是有實際上的用途例如 java.lang.Math、java.util.Arrays。
+
+但在此方式下，就不允許其類別被建構出來。
+
+主要概念很簡單，你在設計一個Utils class，
+
+請將constructor設為private。
+
+並在被實例化時(constructor被執行時)拋出錯誤
+
+[source,java]
+----
+public class CryptoUtils {
+
+    private CryptoUtils() {
+        throw new IllegalStateException("Utility class");
+    }
+
+    public static String md5(String content, String key) {
+
+    }
+}
+----
+

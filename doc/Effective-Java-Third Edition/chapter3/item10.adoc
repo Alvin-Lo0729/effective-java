@@ -1,0 +1,217 @@
+==== 主旨
+
+* overriding equals方法與重點
+
+==== 說明
+
+* overriding equals看起來很簡單，但如果方法錯誤，可能會造成更嚴重的後果
+
+* 避免問題最簡單的方法是不重寫equals，在這種情況下，類別的每個物件就是只能與自己相等
+
+* 如果有以下情況，則overriding equal是正確的行為:
+
+** 該類別的每個實作在本質上是唯一的 +
+如像Thread這樣代表活動的實體物件，而不是數值的物件
+
+** 該類別不需要提供"邏輯等式" +
+例如，java.util.regex.Pattern可以overriding equals，來檢查兩個Pattern物件是否使用完全相同的正則表達式(regex)，而設計者認為不需要或不想要使用這個功能
+
+** 一個覆類別已經overriding equals，則此行為對這個類別來說是合適的 +
+例如，大部分的Set從AbstractSet、List從AbstractList、Map從AbstractMap繼承equals
+
+** 這個類別是私有的，而且肯定equals方法永遠不會被呼叫 +
+如果你對風險非常敏感，你可以overriding equals確保他不會被呼叫 +
+
+* 當一個類別判別是否相等的概念與基本類型不同時並且，父類別沒有覆寫equals時，此時覆寫equals是合適的。
+
+* 程式設計師，希望找出兩個物件的內容邏輯是否相同，且不是比較引用的參照。
+
+[source,java]
+----
+@Override
+public boolean equals(Object o){
+    throw new AssertionError();
+}
+----
+
+* 一種不需要overriding equals的類別，是使用static factory控制的類別，以確保該類別最多只存在一個物件，列舉就類似這種類型
+
+* 當你要overrideing equals時，必須遵守相關規範，以下是Object的規範:
+
+** 對於equals方法實現等價關係的屬性:
+
+*** Reflexive: 對於任何非NULL的參照引用x，x.equals(x)必須返回true。
+
+*** Symmetric: 對於任何非NULL的參照引用x、y，x.equals(y)必須返回true，y.equals(x)必須返回true
+
+*** Transitive: 對於任何非NULL的參照引用x、y、z，如果x.equals(y)為true，且y.equals(z)為true，那麼x.equals(z)也必須為返回true
+
+*** Consistent: 對於任何非NULL的參照引用x、y, 多次呼叫x.equals(y)的返回值必須一致，只要在等值比較中的數據沒有被修改
+
+*** 對於任何非NULL的參照引用X，則x.equals(null)必須返回false
+
+* 以上規則如果違反了，可能會發現你的程式行為不正常或崩潰，且要找出原因非常困難
+
+詳細說明:
+
+* Reflexive: 如果違反此規則，則可能造成同一個物件可多次加入集合當中。
+
+* Symmetric: +
+參考下面的這個類別，他實作了一個部區分大小寫的字串，該字串會不分大小寫的做比較。
+
+[source,java]
+----
+public final class CaseInsensitiveString {
+    private final String s;
+
+    public CaseInsensitiveString(String s) {
+        this.s = Objects.requireNonNull(s);
+    }
+
+
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof CaseInsensitiveString) {
+            return s.equalsIgnoreCase(((CaseInsensitiveString) o).s);
+        };
+        if (o instanceof String) {
+            return s.equalsIgnoreCase((String) o);
+        };
+        return false;
+    }
+
+}
+----
+
+此時因為在equals內有可以比較String的部分，所以我們利用此方法來做比較。
+
+[source,java]
+----
+CaseInsensitiveString cis = new CaseInsensitiveString("Polish");
+String s = "polish";
+
+cis.equals(s);
+s.equals(cis);
+----
+
+在此方法中，cis.equals(s)的返回值會等於true，但在s.equals(cis)的返回值會是false，此部分就違反了對稱性規則，且將CaseInsensitiveString放入到一個集合當中。
+
+[source,java]
+----
+CaseInsensitiveString cis = new CaseInsensitiveString("Polish");
+String s = "polish";
+List<CaseInsensitiveString> list = new ArrayList<>();
+list.add(cis);
+----
+
+此時list.contains(s)會返回什麼呢? +
+以目前openjdk的實作中，他會返回false，但在另外的jdk可能會返回true或拋出異常，一旦違反等價規範，你很分辨物件在與其他物件的判別中，將如何處理
+
+想要消除這個問題，只需要從equals方法中刪除試圖與String互相操作的錯誤想法。
+
+[source,java]
+----
+public final class CaseInsensitiveString {
+    private final String s;
+
+    public CaseInsensitiveString(String s) {
+        this.s = Objects.requireNonNull(s);
+    }
+
+
+    @Override
+    public boolean equals(Object o) {
+        return o instanceof CaseInsensitiveString &&((CaseInsensitiveString) o).s.equalsIgnoreCase(s);
+    }
+
+}
+----
+
+* Transitive : +
+
+[source,java]
+----
+public class Point {
+    private final int x;
+    private final int y;
+
+    public Point(int x, int y) {
+        this.x = x;
+        this.y = y;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof Point)) {
+            return false;
+        }
+        Point p = (Point) o;
+        return p.x == x && p.y == y;
+    }
+}
+----
+
+當你想繼承此類別，增加顏色屬性:
+
+[source,java]
+----
+public class ColorPoint extends Point {
+    private final Color color;
+
+    public ColorPoint(int x, int y, Color color) {
+        super(x, y);
+        this.color = color;
+    }
+}
+----
+
+該怎麼看equals方法呢? +
+如果你完全不考慮，那麼equals就是會從Point繼承的，那麼顏色屬性在此就會被忽略。，但顯然這是不能接受的，所以將複寫equals當，方法參數中，其物件變數color
+
+[source,java]
+----
+@Override
+public boolean equals(Object o) {
+    if (!(o instanceof ColorPoint)){
+        return false;
+    }
+    return super.equals(o) && ((ColorPoint) o).color == color;
+}
+----
+
+Putting it all together, here’s a recipe for a high-quality equals method:
+
+Use the == operator to check if the argument is a reference to this object.
+If so, return true.
+This is just a performance optimization but one that is worth doing if the comparison is potentially expensive.
+2. Use the instanceof operator to check if the argument has the correct type.
+If not, return false.
+Typically, the correct type is the class in which the method occurs.
+Occasionally, it is some interface implemented by this class.
+Use an interface if the class implements an interface that refines the equals contract to permit comparisons across classes that implement the interface.
+Collection interfaces such as Set, List, Map, and Map.Entry have this property.
+3. Cast the argument to the correct type.
+Because this cast was preceded by an instanceof test, it is guaranteed to succeed.
+
+For each “significant” field in the class, check if that field of the argument matches the corresponding field of this object.
+If all these tests succeed, return true; otherwise, return false.
+If the type in Step 2 is an interface, you must access the argument’s fields via interface methods; if the type is a class, you may be able to access the fields directly, depending on their accessibility.
+For primitive fields whose type is not float or double, use the == operator for comparisons; for object reference fields, call the equals method recursively; for float fields, use the static Float.compare(float, float) method; and for double fields, use Double.compare(double, double).
+The special treatment of float and double fields is made necessary by the existence of Float.NaN, -0.0f and the analogous double values; see JLS 15.21.1 or the documentation of Float.equals for details.
+While you could compare float and double fields with the static methods Float.equals and Double.equals, this would entail autoboxing on every comparison, which would have poor performance.
+For array fields, apply these guidelines to each element.
+If every element in an array field is significant, use one of theArrays.equals methods.
+Some object reference fields may legitimately contain null.
+To avoid the possibility of a NullPointerException, check such fields for equality using the static method Objects.equals(Object, Object).
+For some classes, such as CaseInsensitiveString above, field comparisons are more complex than simple equality tests.
+If this is the case, you may want to store a canonical form of the field so the equals method can do a cheap ex- act comparison on canonical forms rather than a more costly nonstandard comparison.
+This technique is most appropriate for immutable classes (Item 17); if the object can change, you must keep the canonical form up to date.
+The performance of the equals method may be affected by the order in which fields are compared.
+For best performance, you should first compare fields that are more likely to differ, less expensive to compare, or, ideally, both.
+You must not compare fields that are not part of an object’s logical state, such as lock fields used to synchronize operations.
+You need not compare derived fields, which can be calculated from “significant fields,” but doing so may improve the performance of the equals method.
+If a derived field amounts to a summa- ry description of the entire object, comparing this field will save you the ex- pense of comparing the actual data if the comparison fails.
+For example, suppose you have a Polygon class, and you cache the area.
+If two polygons have unequal areas, you needn’t bother comparing their edges and vertices.
+
+==== 總結

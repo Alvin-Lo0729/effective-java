@@ -1,0 +1,59 @@
+==== 主旨
+
+* 使用依賴注入而不是使用硬連結
+
+==== 說明
+
+* 許多類別會依賴一個或多個的類別，這種類別作為靜態類別作為實現的情況不少見 *
+
+[source,java]
+----
+// Inappropriate use of static utility - inflexible & untestable!
+public class SpellChecker {
+    private static final Lexicon dictionary = ...;
+
+    private SpellChecker() {} // Noninstantiable
+
+    public static boolean isValid(String word) { ... }
+
+    public static List<String> suggestions(String typo) { ... }
+}
+
+// Inappropriate use of singleton - inflexible & untestable!
+public class SpellChecker {
+    private final Lexicon dictionary = ...;
+
+    private SpellChecker(...) {}
+
+    public static INSTANCE = new SpellChecker(...);
+
+    public boolean isValid(String word) { ... }
+
+    public List<String> suggestions(String typo) { ... }
+}
+----
+
+以上兩中方法其實都不令人滿意，因為都只侷限於一種字典類別，在實際案例中，每個語言都有每種字典，特殊的字典會有特殊的詞彙
+
+我們想要的是讓該類別支持許多字典類別。
+
+[source,java]
+----
+// Dependency injection provides flexibility and testability
+public class SpellChecker {
+    private final Lexicon dictionary;
+
+    public SpellChecker(Lexicon dictionary) {
+        this.dictionary = Objects.requireNonNull(dictionary);
+    }
+    public boolean isValid(String word) { ... }
+
+    public List<String> suggestions(String typo) { ... }
+}
+----
+
+透過SpellChecker validator = new SpellChecker(new dictionary());調用達到需求，這種依賴注入(dependency injection)的方式簡單有彈性又具可測性，目前很多框架（如 Dagger、Guice 或 Spring）都讓我們更容易實現。
+
+==== 總結
+
+盡量少用singleton和static class來時實現依賴多個底層資源，相反的，透過依賴注入的方式來將所需資源注入將大大增加靈活性、可重用性以及可測性。

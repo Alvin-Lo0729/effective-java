@@ -1,0 +1,127 @@
+==== 主旨
+
+本篇在介紹單例模式(singleton pattern)以及相關缺失防範。
+
+==== 說明
+
+* 使用singleton的第一種方法:使用公共類別變數與private constructor
+
+[source,java]
+----
+// Singleton with public final field
+public class Elvis {
+    public static final Elvis INSTANCE = new Elvis();
+
+    private Elvis() {
+
+    }
+
+    public void leaveTheBuilding() {
+
+    }
+}
+----
+
+其方式保證只有一個物件存在，任何使用者做任何事都無法改變這一點，但擁有其特殊權限的使用者，可以使用AccessibleObject.setAccessible 方法，利用反射使用其private constructor ，讓其不再只是唯一一個
+
+如果你需要防衛這種攻擊，修改建構子，讓其private constructor在被呼叫第二次的時候，拋出異常
+
+[source,java]
+----
+ Constructor<?>[] constructors = Elvis.class.getDeclaredConstructors();
+        AccessibleObject.setAccessible(constructors, true);
+
+        Arrays.stream(constructors).forEach(name -> {
+            if (name.toString().contains("Elvis")) {
+                try {
+                    Elvis instance = (Elvis) name.newInstance();
+
+                    instance.leaveTheBuilding();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    System.out.println(e.getLocalizedMessage());
+                }
+            }
+        });
+----
+
+* 使用singleton的第二種方法:使用靜態工廠
+
+[source,java]
+----
+// Singleton with static factory
+public class Elvis {
+    private static final Elvis INSTANCE = new Elvis();
+
+    private Elvis() {
+
+    }
+    public static Elvis getInstance() {
+        return INSTANCE;
+    }
+    public void leaveTheBuilding() {
+
+    }
+}
+----
+
+* 使用靜態工廠的方式優點是
+
+** API清楚表明此為singleton
+
+** 比較彈性控制是否這個class為singleton。
+
+** 可以設計為generic
+
+** 可以設計支持supplier
+
+
+我們在設計一個singleton要把相關可能的缺失都補起來的防禦式開發，防止透過Reflection、Serialization以及Clone創造第2個instance。Reflection的部分就像之前提到的AccessibleObject.setAccessible的解法。再者如果今天這個class implements Serializable，他就不再是Singleton了，因為在de-serialize後會創造一個新的instance，同時調用clone同時也會有新的instance問題。為了防範上述問題可以參考下面範例。首先constructor檢查是否已經存在並拋出錯誤，override clone()拋出不支持錯誤，在readResolve直接返回目前instance。
+
+[source,java]
+----
+public class Elvis implements Cloneable, Serializable {
+
+    private static final long serialVersionUID = 5016600873291582535L;
+    private static final Elvis INSTANCE = new Elvis();
+
+    private Elvis() {
+        if (Elvis.INSTANCE != null) {
+            throw new InstantiationError("The INSTANCE aleady ceated.");
+        }
+    }
+
+    public static Elvis getInstance() {
+        return INSTANCE;
+    }
+
+    @Override
+    public Object clone() throws CloneNotSupportedException {
+        throw new CloneNotSupportedException();
+    }
+
+    protected Object readResolve() {
+        return INSTANCE;
+    }
+
+    public void leaveTheBuilding() {
+
+    }
+
+}
+----
+
+[source,java]
+----
+public enum Car {
+    Instance;
+
+    public void getStart() {
+
+        System.out.println("start :");
+    }
+}
+----
+
+使用enum是比較推薦實現singleton的作法，簡單又沒有上面那些問題。
+

@@ -1,0 +1,97 @@
+==== 主旨
+
+* 避免不必要的建立物件
+
+==== 說明
+
+* 重複使用一個物件往往比重新建構一個新的相同物件來的合適
+
+* 如果一個物件是不可變的，往往總是可以被重用
+
+[source,java]
+----
+String s = new String("bikini"); // DON'T DO THIS!
+----
+
+* 該語法在執行時都會新建一個String，這些創建都是不必要的
+
+* 如果這種用法出現在foreach或經常被呼叫的方法中，那麼就會不必要的建立數百或數千的String
+
+.改進後的版本如下
+[source,java]
+----
+String s = "bikini";
+----
+
+* 通常你可使用靜態工廠方法來避免創造不必要的物件，而不是利用建構子，建立不可變類別
+
+* 例如工廠方法的Boolean.valueOf(String)比起Boolean(String)要好，而且後者在JAVA9被棄用
+
+* 建構子每次被使用的時候，都會建立一個物件，而工廠方法不會這麼做
+
+* 有些物件的建立是極其 *昂貴的*
+
+* 所以如果需要反覆建立這樣一個物件，最好是將其緩存以達到重複使用
+
+.正則表達式範例
+[#patten]
+[source,java]
+----
+// Performance can be greatly improved!
+static boolean isRomanNumeral(String s) {
+    return s.matches("^(?=.)M*(C[MD]|D?C{0,3})"
+    + "(X[CL]|L?X{0,3})(I[XV]|V?I{0,3})$");
+}
+----
+
+上面<<patten>>中，使用此方法時，每次會建立兩個以上的物件(Pattern、Matcher)，且依賴於使用String.matches方法，所以建議改為以下方法
+
+.正則表達式範例改良
+[#patten2]
+[source,java]
+----
+// Reusing expensive object for improved performance
+public class RomanNumerals {
+    private static final Pattern ROMAN = Pattern.compile(
+        "^(?=.)M*(C[MD]|D?C{0,3})"
+        + "(X[CL]|L?X{0,3})(I[XV]|V?I{0,3})$");
+    static boolean isRomanNumeral(String s) {
+        return ROMAN.matcher(s).matches();
+    }
+}
+----
+
+* 改良後其速度會得到提升
+
+* 且使用靜態工廠方法，可將方法命名更為直覺、易讀
+
+除了上述方法以外還有另一個範例
+
+[source,java]
+----
+private static long sum() {
+    Long sum = 0L;
+    for (long i = 0; i <= Integer.MAX_VALUE; i++)
+    sum += i;
+    return sum;
+}
+----
+
+此方式在每次+=i的時候，都會新建立一個Long，會造成大量的資源浪費，且執行時間也會被拉長
+
+.修正後的方法
+[source,java]
+----
+private static long sum() {
+    long sum = 0L;
+    for (long i = 0; i <= Integer.MAX_VALUE; i++)
+    sum += i;
+    return sum;
+}
+----
+
+* 在我的電腦中，使用了Long花費高達了6秒多，而使用了long則為0.6秒
+
+==== 總結
+
+* 在創建物件時，需考慮此物件建立的代價，且如果是常被使用的物件，則建議用於緩存，而不是每次都新建一個類別

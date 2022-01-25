@@ -1,0 +1,86 @@
+==== 主旨
+
+* 盡量使用 try-with-resource ，而不是使用try-finally
+
+==== 說明
+
+* java libraries中包含很多API都需要呼叫close方法手動關閉，相關資源。
+
+    InputStream、OutputStream和java.sql.Connection
+
+* 也因為如此，關閉其資源很常被忽略，而造成效能的問題。
+
+* 從以前才說，try-finally是保證資源被正確關閉的最好方法，即使面對異常或返回
+
+.try-finally範例
+[#tryFinally]
+[source,java]
+----
+// try-finally - No longer the best way to close resources!
+static String firstLineOfFile(String path) throws IOException {
+
+    BufferedReader br = new BufferedReader(new FileReader(path));
+    try {
+
+        return br.readLine();
+
+    } finally {
+
+        br.close();
+
+    }
+}
+----
+
+.當有第二個資源或更多的資源加入後
+[source,java]
+----
+   // try-finally is ugly when used with more than one resource!
+    static void copy(String src, String dst) throws IOException {
+        InputStream in = new FileInputStream(src);
+        try {
+            OutputStream out = new FileOutputStream(dst);
+            try {
+                byte[] buf = new byte[BUFFER_SIZE];
+                int n;
+                while ((n = in.read(buf)) >= 0)
+                    out.write(buf, 0, n);
+            } finally {
+                out.close();
+            }
+        } finally {
+            in.close();
+        }
+    }
+----
+
+在第一段<<tryFinally>>中，對於呼叫readLine方法可能發生失敗，但也因為這樣，其close方法也會因為相同原因而失敗。
+
+在這種狀況下，第二個異常會蓋掉第一個異常，造成除錯變得複雜。
+
+在java7加入了try-with-resources，這些問題都被解決了。
+
+java7中為了要使用這種語法，該類別必須實現AutoCloseable，
+
+而且現在java的lib或第三方的套件中，都實現了AutoCloseable。
+
+[source,java]
+----
+  // try-with-resources - the the best way to close resources!
+    static String firstLineOfFile(String path) throws IOException {
+        try (BufferedReader br = new BufferedReader(
+                new FileReader(path))) {
+            return br.readLine();
+        }
+    }
+
+----
+
+
+
+==== 總結
+
+* 在面對需要使用資源時，優先使用try-with-resources，而不是try-finally
+
+* 其優點在於，程式更短、簡潔，也較能準確抓到異常的部分
+

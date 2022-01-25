@@ -1,0 +1,303 @@
+==== 主旨
+
+* 當建構子有太多參數且變動時，建議使用Builder模式
+
+==== 說明
+
+* 靜態工廠方法和建構子都有一個共通的限制:它們不能很好的擴展大量的可選方法參數
+
+* 參考一下食品標籤上的參數，分量、每份的卡路里、總脂肪、飽和脂肪、反式脂肪、膽固醇、鈉
+
+* 大多數產品在這些選項上只有少數的選項數值為非零
+
+* 傳統上程式設計師會使用 伸縮建構子，即提供一個只有必要參數的建構子，另外一個只有一個可選參數的建構子，第三個有兩個可選參數的建構子，以此類推，最終形成一個有所有可選參數的建構子。
+
+.範例
+[source,java]
+----
+// Telescoping constructor pattern - does not scale well!
+public class NutritionFacts {
+
+    private final int servingSize; // (mL) required
+    private final int servings; // (per container) required
+    private final int calories; // (per serving) optional
+    private final int fat; // (g/serving) optional
+    private final int sodium; // (mg/serving) optional
+    private final int carbohydrate; // (g/serving) optional
+
+    public NutritionFacts(int servingSize, int servings) {
+        this(servingSize, servings, 0);
+    }
+
+    public NutritionFacts(int servingSize, int servings,int calories) {
+        this(servingSize, servings, calories, 0);
+    }
+    public NutritionFacts(int servingSize, int servings,int calories, int fat) {
+        this(servingSize, servings, calories, fat, 0);
+    }
+    public NutritionFacts(int servingSize, int servings, int calories, int fat, int sodium) {
+        this(servingSize, servings, calories, fat, sodium, 0);
+    }
+    public NutritionFacts(int servingSize, int servings,int calories, int fat, int sodium, int carbohydrate) {
+        this.servingSize = servingSize;
+        this.servings = servings;
+        this.calories = calories;
+        this.fat = fat;
+        this.sodium = sodium;
+        this.carbohydrate = carbohydrate;
+    }
+}
+----
+
+* 當你想要建立一個物件實體時:
+
+[source,java]
+----
+NutritionFacts cocaCola = new NutritionFacts(240, 8, 100, 0, 35, 27);
+----
+
+* 通常情況下，這種方式需要你設置你不想設置的參數，但你不得不為他設置一個值，在這種狀況下，我們為脂肪傳遞了一個0的值
+
+* 在只有六個參數的情況下，這似乎不是很糟糕，但隨著參數數量的增加，他很快就會失去控制
+
+* 簡單來說伸縮建構子式有效的，但方法參數量龐大的時候，就會變得很複雜而且難懂。
+
+* 然而如果當參數量龐大，使用者填入錯誤時，編譯器可能不會出現訊息，而是在執行時才會出現。
+
+* 第二個方式是選擇JavaBeans模式，即使用無參數建構子，然後使用setter設置每個需要的數值。
+
+[source,java]
+----
+// JavaBeans Pattern - allows inconsistency, mandates mutability
+public class NutritionFacts {
+// Parameters initialized to default values (if any)
+private final int servingSize = -1; // Required; no default value
+private final int servings = -1; // Required; no default value
+private final int calories = 0;
+private final int fat = 0;
+private final int sodium = 0;
+private final int carbohydrate = 0;
+public NutritionFacts() { }
+public void setServingSize(int val) { servingSize = val; }
+public void setServings(int val) { servings = val; }
+public void setCalories(int val) { calories = val; }
+public void setFat(int val) { fat = val; }
+public void setSodium(int val) { sodium = val; }
+public void setCarbohydrate(int val) { carbohydrate = val; }
+}
+----
+
+* 此種模式沒有伸縮建構子模式的缺點，儘管有點囉嗦，但較為容易讀懂
+
+[source,java]
+----
+NutritionFacts cocaCola = new NutritionFacts();
+cocaCola.setServingSize(240);
+cocaCola.setServings(8);
+cocaCola.setCalories(100);
+cocaCola.setSodium(35);
+cocaCola.setCarbohydrate(27);
+----
+
+不幸的是，JavaBean模式也有嚴重的缺點。
+
+因為建構時後續的使用部分，需額外設定數值，無法保證數值的一致性，且缺乏檢查的手段，因此較難調整
+
+此模式也容易在運行時發生錯誤，因為編譯器無法保證，程式設計師在使用該物件的時候，能照原設計者的方式，呼叫檢核的相關方法。
+
+* 第三種模式，結合了伸縮構造子的安全性與java bean的可讀性，他是builder模式的一種形式
+
+* 使用者不直接使用建構子，而是用所有需要的參數，呼叫一個建構函數，然後使用者在建構器上呼叫類似setter的方法，來設置所需參數，最後使用者呼叫一個無參數的建構方法來建立物件。
+
+* builder通常是他所建構的類別中的一個靜態類別成員
+
+[source,java]
+----
+// Builder Pattern
+public class NutritionFacts {
+    private final int servingSize;
+    private final int servings;
+    private final int calories;
+    private final int fat;
+    private final int sodium;
+    private final int carbohydrate;
+
+    public static class Builder {
+        // Required parameters
+        private final int servingSize;
+        private final int servings;
+        // Optional parameters - initialized to default values
+        private int calories = 0;
+        private int fat = 0;
+        private int sodium = 0;
+        private int carbohydrate = 0;
+
+        public Builder(int servingSize, int servings) {
+            this.servingSize = servingSize;
+            this.servings = servings;
+        }
+
+        public Builder calories(int val) {
+            calories = val;
+            return this;
+        }
+
+        public Builder fat(int val) {
+            fat = val;
+            return this;
+        }
+
+        public Builder sodium(int val) {
+            sodium = val;
+            return this;
+        }
+
+        public Builder carbohydrate(int val) {
+            carbohydrate = val;
+            return this;
+        }
+
+        public NutritionFacts build() {
+            return new NutritionFacts(this);
+        }
+    }
+
+    private NutritionFacts(Builder builder) {
+        servingSize = builder.servingSize;
+        servings = builder.servings;
+        calories = builder.calories;
+        fat = builder.fat;
+        sodium = builder.sodium;
+        carbohydrate = builder.carbohydrate;
+    }
+}
+----
+
+* NutritionFacts為不可變的(immutable)，所有參數的預設值都在同一個地方做處理
+
+* 建構器的setter方法，返回builder本身，因次調用可以連鎖進行，因而形成一個較為流暢的API
+
+[source,java]
+----
+NutritionFacts cocaCola = new NutritionFacts.Builder(240, 8).calories(100).sodium(35).carbohydrate(27).build()
+----
+
+* 此種方式較容易編寫，重要的是容易閱讀
+
+* 此方法也可在建構的函數或方法中，去驗證參數
+
+* builder模式，也適合使用在分層結構中
+
+[source,java]
+----
+public abstract class Pizza {
+    public enum Topping {HAM, MUSHROOM, ONION, PEPPER, SAUSAGE}
+
+    final Set<Topping> toppings;
+
+    abstract static class Builder<T extends Builder<T>> {
+        EnumSet<Topping> toppings = EnumSet.noneOf(Topping.class);
+
+        public T addTopping(Topping topping) {
+            toppings.add(Objects.requireNonNull(topping));
+            return self();
+        }
+
+        abstract Pizza build();
+
+        // Subclasses must override this method to return "this"
+        protected abstract T self();
+    }
+
+    Pizza(Builder<?> builder) {
+        toppings = builder.toppings.clone(); // See Item 50
+    }
+}
+
+----
+
+[source,java]
+----
+public class NyPizza extends Pizza {
+    public enum Size {SMALL, MEDIUM, LARGE}
+
+    private final Size size;
+
+    public static class Builder extends Pizza.Builder<Builder> {
+        private final Size size;
+
+        public Builder(Size size) {
+            this.size = Objects.requireNonNull(size);
+        }
+
+        @Override
+        public NyPizza build() {
+            return new NyPizza(this);
+        }
+
+        @Override
+        protected Builder self() {
+            return this;
+        }
+    }
+
+    private NyPizza(Builder builder) {
+        super(builder);
+        size = builder.size;
+    }
+}
+----
+
+[source,java]
+----
+public class Calzone extends Pizza {
+    private final boolean sauceInside;
+
+    public static class Builder extends Pizza.Builder<Builder> {
+        private boolean sauceInside = false; // Default
+
+        public Builder sauceInside() {
+            sauceInside = true;
+            return this;
+        }
+
+        @Override
+        public Calzone build() {
+            return new Calzone(this);
+        }
+
+        @Override
+        protected Builder self() {
+            return this;
+        }
+    }
+
+    private Calzone(Builder builder) {
+        super(builder);
+        sauceInside = builder.sauceInside;
+    }
+}
+----
+
+[source,java]
+----
+NyPizza pizza = new NyPizza.Builder(SMALL)
+.addTopping(SAUSAGE).addTopping(ONION).build();
+
+Calzone calzone = new Calzone.Builder()
+.addTopping(HAM).sauceInside().build();
+----
+
+* 在builder pattern中，我們可以建立所需類別，而且也達到檢核、易讀的效果
+
+* builder pattern也有缺點，因為為了建造一個物件，則必須建造他的builder，所以在對性能要求很高的狀況下，是個問題，而且在參數量不大的狀況下，使用builder pattern會有較冗長的問題
+
+* 如果一開始此類別，在未來有預計擴充，或放入更多參數，請一開始就使用builder pattern會比較好
+
+==== 總結:
+
+* 當設計建構子或者使用靜態工廠創建一個物件時，當其參數有4個或多個以上，特別是當許多參數是可選的時候，builder pattern是一個不錯的選擇。
+
+* 比起伸縮建構子，builder pattern較易閱讀與編寫
+
+* 比起JavaBeans較為容易檢核

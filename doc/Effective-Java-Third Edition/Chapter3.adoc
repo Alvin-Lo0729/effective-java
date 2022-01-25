@@ -1,0 +1,3 @@
+=== Obey the general contract when overriding equals
+
+include::chapter3/item10.adoc[]

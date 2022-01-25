@@ -1,0 +1,57 @@
+==== 主旨
+
+* 建議使用靜態工廠方法替代建構子
+
+==== 總結
+
+. 優點
+
+.. 靜態工廠方法中，有方法名字，可以讓使用者理解
+
+.. 可以不需要在每次呼叫時，都需要建立一個新的物件
+
+.. 可以返回其子類別物件
+
+.. 可藉由方法參數判斷，要返回的物件
+
+.. 不一定要返回值
+
+. 限制或者缺點
+
+.. 沒有提供constructors ，所以不能被子類別化
+
+.. 比較難被programmers找到，在Java Doc中他是與物件的方法放在一起，而不向建構子一樣是被分開的，甚至在使用時，也較難讓使用者一目了然，以下有建議的靜態方法名稱，這樣在使用時，較為清楚:
+
+... *from* : 一個類型的轉換方法，他接受一個單一的方法參數，且返回該類型的相應實體物件，舉個例子:
+
+    Date d = Date.from(instant)
+
+... *of* : 一個集合的方法，可接受數個方法參數，且會整合在一起，並返回對應的集合，舉個例子:
+
+    Set<Rank> faceCards = EnumSet.of(JACK, QUEEN, KING);
+
+... *valueOf* : 一個比from與to較為粗略的替代方式，舉個例子:
+
+    BigInteger prime = BigInteger.valueOf(Integer.MAX_VALUE);
+
+... *create or newInstance* : 和instance和getInstance一樣，只是該方法保證每次都會取得一個新的物件, 舉個例子:
+
+    Object newArray = Array.newInstance(classObject, arrayLen);
+
+... *getType* : 像getInstance, 根據不同的類別並使用工廠方法取得。舉個例子:
+
+    FileStore fs = Files.getFileStore(path);
+
+... *newType* : 像getInstance, 根據不同的類別並使用工廠方法取得。舉個例子:
+
+    BufferedReader br = Files.newBufferedReader(path);
+
+... *type* : 一個較為簡潔的方式替代getType或newType
+
+    List<Complaint> litany = Collections.list(legacyLitany);
+
+
+
+靜態工廠方法與建構子都有它們的用途，了解他們的相對優勢，是有好處的。 +
+
+通常狀況下靜態工廠更受歡迎，所以在建立公共的建構子時，考慮一下靜態工廠的建立方式

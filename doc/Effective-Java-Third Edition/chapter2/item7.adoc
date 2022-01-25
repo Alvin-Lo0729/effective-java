@@ -1,0 +1,72 @@
+==== 主旨
+
+* 移除不需要的物件引用
+
+==== 說明
+
+* 如果你是從手動去管理記憶體的程式語言(C、C++)，轉換到使用垃圾蒐集器的程式語言(java)，作為一個工程師，其工作會輕鬆很多，因為你的物件在使用完後就會被回收。
+
+* 這很容易使人產生，不需要去管控記憶體，這是不完全正確的
+
+.範例1
+[source,java]
+----
+// Can you spot the "memory leak"?
+public class Stack {
+    private Object[] elements;
+    private int size = 0;
+    private static final int DEFAULT_INITIAL_CAPACITY = 16;
+
+    public Stack() {
+        elements = new Object[DEFAULT_INITIAL_CAPACITY];
+    }
+
+    public void push(Object e) {
+        ensureCapacity();
+        elements[size++] = e;
+    }
+
+    public Object pop() {
+        if (size == 0) {
+            throw new EmptyStackException();
+        }
+        return elements[--size];
+    }
+
+    /**
+     * Ensure space for at least one more element, roughly
+     * doubling the capacity each time the array needs to grow.
+     */
+    private void ensureCapacity() {
+        if (elements.length == size)
+            elements = Arrays.copyOf(elements, 2 * size + 1);
+    }
+}
+----
+
+此程序看起來沒有明顯的問題，你可以對他進行測試，他可以通過每一項測試，但是有一個問題潛伏著。
+
+此程式有個memory leak的問題，嚴重的話甚至會出現OutOfMemoryError的故障
+
+.修正方法
+[source,java]
+----
+public Object pop() {
+    if (size == 0){
+        throw new EmptyStackException();
+    }
+    Object result = elements[--size];
+    elements[size] = null; // Eliminate obsolete reference
+    return result;
+}
+----
+
+假如你在總公司提供了一個簡單的推送API服務，集團會員登入上線會自動註冊你的服務，會員就可以收到總公司的推送消息。一開始沒什麼問題，使用時間久了後發現server負擔越來越大導致OOM，一時也找不出原因只能先靠重啟暫時解決問題，這樣類似的問題困擾著很多開發者又不得其門而入。這個例子其實很多會員下線了以後服務根本不知道，也沒有進行取消註冊服務，導致最後服務每次都要一直大量推送資料給沒有在線的會員。
+
+
+
+==== 總結
+
+* 記憶體洩漏的問題通常不會表現得很明顯，都會在某個壓力峰值或著某個特別的操作爆發，它們可能在系統裡面是一顆多年的毒瘤，目前的解決方法不外乎是仔細的進行code review以及小規模的重構系統，或著透過分析工具來檢測系統。
+
+* 可使用WeakHashMap來做管理
