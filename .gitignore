@@ -42,3 +42,6 @@ buildNumber.properties
 *.iml
 
 /src/doc/**/**.html
+
+
+**/**.html

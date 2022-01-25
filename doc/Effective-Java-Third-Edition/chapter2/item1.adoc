@@ -1,3 +1,5 @@
+=== Consider static factory methods instead of constructors
+
 ==== 主旨
 
 * 建議使用靜態工廠方法替代建構子

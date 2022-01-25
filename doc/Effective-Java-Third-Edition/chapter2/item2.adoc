@@ -1,3 +1,5 @@
+=== Consider a builder when faced with many constructor parameters
+
 ==== 主旨
 
 * 當建構子有太多參數且變動時，建議使用Builder模式

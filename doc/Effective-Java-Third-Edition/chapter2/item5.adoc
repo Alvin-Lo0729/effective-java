@@ -1,3 +1,5 @@
+=== Prefer dependency injection to hardwiring resources
+
 ==== 主旨
 
 * 使用依賴注入而不是使用硬連結

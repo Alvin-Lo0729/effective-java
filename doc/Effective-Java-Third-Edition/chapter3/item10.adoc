@@ -1,3 +1,5 @@
+=== Obey the general contract when overriding equals
+
 ==== 主旨
 
 * overriding equals方法與重點

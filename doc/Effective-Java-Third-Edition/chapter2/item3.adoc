@@ -1,3 +1,5 @@
+=== Enforce the singleton property with a private constructor or an enum type
+
 ==== 主旨
 
 本篇在介紹單例模式(singleton pattern)以及相關缺失防範。

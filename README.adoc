@@ -10,19 +10,27 @@ v1.0, 2021-12-20
 :imagesdir: images
 :url-org: https://github.com/Alvin-Lo0729
 :url-repo: {url-org}/effective-java
+:url-rel-file-base: link:
+:url-rel-tree-base: link:
+ifdef::env-site,env-yard[]
 :url-rel-file-base: {url-repo}/blob/master/
+:url-rel-tree-base: {url-repo}/tree/HEAD/
+endif::[]
+
 
 
 == Creating and Destroying Objects
 
 在此章節內容包含建立與銷毀物件: 何時與如何建立物件、何時與如何避免建立、如何確保他們及時的被刪除、以及如何管理，在銷毀前的清理動作
 
-
+ifndef::env-site,env-yard[]
 {url-rel-file-base}/doc/Effective-Java-Third-Edition/Chapter2.adoc[Chapter2]
-
+endif::[]
 
 == Methods Common to All Objects
 
 Object是java中最源頭的物件，所有類都會繼承，其中有許多Object中的方法，如equals、hashCode、toString、clone，此章介紹何時以及如何覆寫
 
+ifndef::env-site,env-yard[]
 {url-rel-file-base}/doc/Effective-Java-Third-Edition/Chapter3.adoc[Chapter2]
+endif::[]

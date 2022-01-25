@@ -1,3 +1,5 @@
+=== Avoid finalizers and cleaners
+
 ==== 主旨
 
 * 避免使用finalize與Cleaner

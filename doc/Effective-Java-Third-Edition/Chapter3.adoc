@@ -1,3 +1,2 @@
-=== Obey the general contract when overriding equals
 
-include::chapter3/item10.adoc[]
+include::chapter3/item10.adoc[Obey the general contract when overriding equals]

@@ -1,3 +1,5 @@
+=== Enforce noninstantiability with a private constructor
+
 ==== 主旨
 
 透過私有建構函式來禁止實例化

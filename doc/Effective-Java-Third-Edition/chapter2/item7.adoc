@@ -1,3 +1,5 @@
+=== Eliminate obsolete object references
+
 ==== 主旨
 
 * 移除不需要的物件引用
