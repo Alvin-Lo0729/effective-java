@@ -32,5 +32,5 @@ endif::[]
 Object是java中最源頭的物件，所有類都會繼承，其中有許多Object中的方法，如equals、hashCode、toString、clone，此章介紹何時以及如何覆寫
 
 ifndef::env-site,env-yard[]
-{url-rel-file-base}/doc/Effective-Java-Third-Edition/Chapter3.adoc[Chapter2]
+{url-rel-file-base}/doc/Effective-Java-Third-Edition/Chapter3.adoc[Chapter3]
 endif::[]
