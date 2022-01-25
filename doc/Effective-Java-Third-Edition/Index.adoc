@@ -1,0 +1,27 @@
+= Effective Java Third Edition
+Alvin-Lo <ak47237496@gmail.com>
+v1.0, 2021-12-20
+:experimental:
+:icons: font
+:source-highlighter: prettify
+:sectnums:
+:toc: left
+:toc-title: 大綱
+:imagesdir: images
+:url-org: https://github.com/Alvin-Lo0729
+:url-repo: {url-org}/effective-java
+:url-rel-file-base: link:
+:url-rel-tree-base: link:
+ifdef::env-site,env-yard[]
+:url-rel-file-base: {url-repo}/blob/master/
+:url-rel-tree-base: {url-repo}/tree/HEAD/
+endif::[]
+
+
+== Chapter2
+
+include::Chapter2.adoc[]
+
+== Chapter3
+
+include::Chapter3.adoc[]

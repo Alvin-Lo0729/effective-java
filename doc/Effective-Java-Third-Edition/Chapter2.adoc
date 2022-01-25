@@ -1,4 +1,6 @@
-include::chapter2/item1.adoc[Consider static factory methods instead of constructors]
+
+
+include::chapter2/item1.adoc[]
 
 include::chapter2/item2.adoc[Consider a builder when faced with many constructor parameters]
 
